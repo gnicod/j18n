@@ -1,4 +1,4 @@
-module j18n
+module github.com/gnicod/j18n
 
 go 1.15
 

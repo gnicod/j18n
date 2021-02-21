@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"j18n/config"
 	"log"
 
+	"github.com/gnicod/j18n/config"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"

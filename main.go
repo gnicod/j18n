@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "j18n/cmd"
+import "github.com/gnicod/j18n/cmd"
 
 func main() {
 	cmd.Execute()
