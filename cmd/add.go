@@ -16,36 +16,74 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"j18n/config"
+	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
+
+var lang string
+var force bool
 
 // addCmd represents the add command
 var addCmd = &cobra.Command{
 	Use:   "add",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Add a new translation key",
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("add called", args)
+		jpath := args[0]
+		config := config.NewConfig()
+		for lang, path := range config.Langs {
+			fullPath := fmt.Sprintf("%s/%s", config.BasePath, path)
+			jsonContent := getJsonContent(fullPath)
+			if !force {
+				currentValue := gjson.Get(jsonContent, jpath).String()
+				if currentValue != "" {
+					fmt.Printf("Value for key %s and lang %s (%s) already exists, passing. Use -f to force change the value\n", jpath, lang, currentValue)
+					continue
+				}
+			}
+			value := promptTranslation(lang)
+			newJsonValue, _ := sjson.Set(jsonContent, jpath, value)
+			newJsonValue = jsonPrettyPrint(newJsonValue)
+			_ = ioutil.WriteFile(fullPath, []byte(newJsonValue), 0644)
+		}
 	},
 }
 
+func jsonPrettyPrint(in string) string {
+	var out bytes.Buffer
+	err := json.Indent(&out, []byte(in), "", "\t")
+	if err != nil {
+		return in
+	}
+	return out.String()
+}
+
+func getJsonContent(path string) string {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	text := string(content)
+	return text
+}
+
+func promptTranslation(lang string) string {
+	fmt.Printf("Value for %s: \n", lang)
+	var value string = "default"
+	fmt.Scanln(&value)
+	return value
+}
+
 func init() {
+	addCmd.Flags().StringVarP(&lang, "lang", "l", "", "Lang to set the value")
+	addCmd.Flags().BoolVarP(&force, "force", "f", false, "Change the value of the translation even if the value already exist")
 	rootCmd.AddCommand(addCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// addCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

@@ -17,10 +17,14 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
+
+	"j18n/config"
+
 	"github.com/spf13/cobra"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
@@ -54,7 +58,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.j18n.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./js8n.json", "config file (default is $HOME/.j18n.json)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -67,19 +71,26 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		cobra.CheckErr(err)
-
 		// Search config in home directory with name ".j18n" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".j18n")
+		viper.SetConfigType("json")
+		viper.AddConfigPath(".")
+		viper.SetConfigName(".j18n.json")
 	}
-
+	config := config.NewConfig()
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil {             // Handle errors reading the config file
+		fmt.Printf("Config %s not found\n", cfgFile)
+		os.Exit(2)
 	}
+	cfgUsed := viper.ConfigFileUsed()
+	currentPath, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	path := fmt.Sprintf("%s/%s", currentPath, cfgUsed)
+	dir := filepath.Dir(path)
+	config.BasePath = dir
+	err = viper.Unmarshal(config)
 }

@@ -1,0 +1,7 @@
+{
+    "test": "ok",
+    "langs": {
+        "es": "es.json",
+        "fr": "fr.json"
+    }
+}
