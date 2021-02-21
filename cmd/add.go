@@ -16,11 +16,13 @@ limitations under the License.
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/gnicod/j18n/config"
 	"github.com/spf13/cobra"
@@ -77,9 +79,15 @@ func getJsonContent(path string) string {
 
 func promptTranslation(lang string) string {
 	fmt.Printf("Value for %s: \n", lang)
-	var value string = "default"
-	fmt.Scanln(&value)
-	return value
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		return scanner.Text()
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+	}
+	return scanner.Text()
+
 }
 
 func init() {
