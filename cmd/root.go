@@ -56,7 +56,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./js8n.json", "config file (default is $HOME/.j18n.json)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./.j18n.json", "config file (default is $HOME/.j18n.json)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -65,15 +65,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Search config in home directory with name ".j18n" (without extension).
-		viper.SetConfigType("json")
-		viper.AddConfigPath(".")
-		viper.SetConfigName(".j18n.json")
-	}
+	viper.SetConfigFile(cfgFile)
 	config := config.NewConfig()
 	viper.AutomaticEnv() // read in environment variables that match
 
